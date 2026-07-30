@@ -1,0 +1,51 @@
+name: loan-approval
+start: submitLoan
+steps:
+  - id: submitLoan
+    name: Submit Loan
+    type: AUTOMATIC
+    handler: submitLoan
+    next: validateDocuments
+
+  - id: validateDocuments
+    name: Validate Documents
+    type: AUTOMATIC
+    handler: validateDocuments
+    next: creditCheck
+
+  - id: creditCheck
+    name: Credit Check
+    type: AUTOMATIC
+    handler: creditCheck
+    retry:
+      maxAttempts: 3
+      backoffMs: 500
+    next: fraudCheck
+
+  - id: fraudCheck
+    name: Fraud Check
+    type: AUTOMATIC
+    handler: fraudCheck
+    next: managerApproval
+
+  - id: managerApproval
+    name: Manager Approval
+    type: MANUAL_APPROVAL
+    next: disbursement
+
+  - id: disbursement
+    name: Disbursement
+    type: AUTOMATIC
+    handler: disbursement
+    compensate: reverseDisbursement
+    next: finalizeLoan
+
+  - id: finalizeLoan
+    name: Finalize Loan
+    type: AUTOMATIC
+    handler: finalizeLoan
+    next: emailCustomer
+
+  - id: emailCustomer
+    name: Email Customer
+    type: EMAIL_NOTIFY

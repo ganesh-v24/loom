@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Workflow Instances</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; background: #0b0f14; color: #e6edf3; }
+        h1 { font-size: 1.4rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #2a313a; }
+        th { color: #8b949e; font-weight: 600; }
+        a { color: #58a6ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .RUNNING { background: #1f6feb33; color: #58a6ff; }
+        .WAITING_APPROVAL { background: #9e6a0333; color: #d29922; }
+        .COMPLETED { background: #23863633; color: #3fb950; }
+        .FAILED { background: #da363333; color: #f85149; }
+        .COMPENSATING { background: #9e6a0333; color: #d29922; }
+        .COMPENSATED { background: #6e40c933; color: #a371f7; }
+    </style>
+</head>
+<body>
+<h1>Workflow Instances</h1>
+<table>
+    <thead>
+    <tr><th>Definition</th><th>Status</th><th>Current Step</th><th>Created</th><th>Updated</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="i : ${instances}">
+        <td><a th:href="@{'/instances/' + ${i.id()}}" th:text="${i.definitionName()} + ' v' + ${i.definitionVersion()}">def</a></td>
+        <td><span class="badge" th:classappend="${i.status()}" th:text="${i.status()}">STATUS</span></td>
+        <td th:text="${i.currentStepId()}">step</td>
+        <td th:text="${i.createdAt()}">created</td>
+        <td th:text="${i.updatedAt()}">updated</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

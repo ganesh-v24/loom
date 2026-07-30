@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Instance ' + ${detail.summary().id()}">Instance</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; background: #0b0f14; color: #e6edf3; }
+        h1 { font-size: 1.4rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #2a313a; }
+        th { color: #8b949e; font-weight: 600; }
+        a { color: #58a6ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .RUNNING { background: #1f6feb33; color: #58a6ff; }
+        .WAITING_APPROVAL { background: #9e6a0333; color: #d29922; }
+        .COMPLETED { background: #23863633; color: #3fb950; }
+        .FAILED { background: #da363333; color: #f85149; }
+        .SUCCEEDED { background: #23863633; color: #3fb950; }
+        .COMPENSATING { background: #9e6a0333; color: #d29922; }
+        .COMPENSATED { background: #6e40c933; color: #a371f7; }
+        button { background: #238636; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        button:hover { background: #2ea043; }
+        section { margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+<p><a href="/">&larr; Back to instances</a></p>
+<h1 th:text="${detail.summary().definitionName()} + ' v' + ${detail.summary().definitionVersion()}">Workflow</h1>
+<p>
+    Status: <span class="badge" th:classappend="${detail.summary().status()}" th:text="${detail.summary().status()}">STATUS</span>
+    &nbsp; Current step: <span th:text="${detail.summary().currentStepId()}">step</span>
+</p>
+
+<form th:if="${detail.summary().status() == 'WAITING_APPROVAL'}" method="post"
+      th:action="@{'/instances/' + ${detail.summary().id()} + '/approve'}">
+    <button type="submit">Approve</button>
+</form>
+
+<section>
+    <h2>Step History</h2>
+    <table>
+        <thead>
+        <tr><th>Step</th><th>Status</th><th>Attempt</th><th>Started</th><th>Finished</th><th>Error</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${detail.steps()}">
+            <td th:text="${s.stepName()}">step</td>
+            <td><span class="badge" th:classappend="${s.status()}" th:text="${s.status()}">STATUS</span></td>
+            <td th:text="${s.attempt()}">1</td>
+            <td th:text="${s.startedAt()}">started</td>
+            <td th:text="${s.finishedAt()}">finished</td>
+            <td th:text="${s.errorMessage()}">error</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <h2>Audit Log</h2>
+    <table>
+        <thead>
+        <tr><th>Event</th><th>Detail</th><th>Timestamp</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${detail.audit()}">
+            <td th:text="${a.eventType()}">event</td>
+            <td th:text="${a.detail()}">detail</td>
+            <td th:text="${a.timestamp()}">time</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
