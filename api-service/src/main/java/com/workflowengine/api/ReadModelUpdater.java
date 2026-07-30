@@ -34,6 +34,7 @@ public class ReadModelUpdater {
         InstanceSummaryView view = instanceSummaryViewRepository.findById(event.instanceId())
                 .orElseGet(() -> InstanceSummaryView.builder()
                         .id(event.instanceId())
+                        .workflowDefinitionId(event.definitionId())
                         .createdAt(event.updatedAt())
                         .build());
 

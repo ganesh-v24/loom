@@ -45,7 +45,13 @@ public class WorkflowStepWorker {
     @KafkaListener(topics = Topics.STEP_EXECUTE, concurrency = "3")
     public void onStepExecutionRequested(StepExecutionRequested event) {
         WorkflowInstanceEntity instance = instanceRepository.findById(event.instanceId()).orElse(null);
-        if (instance == null || instance.getStatus() != InstanceStatus.RUNNING) {
+        if (instance == null) {
+            // InstanceStateChanged (a different topic, no ordering guarantee relative to this
+            // one) may not have replicated yet — throw so the container's retry/backoff gives it
+            // a chance to arrive, instead of silently dropping this step execution forever.
+            throw new IllegalStateException("Instance replica not yet available: " + event.instanceId());
+        }
+        if (instance.getStatus() != InstanceStatus.RUNNING) {
             log.debug("Ignoring stale step-execute event for instance {} (not RUNNING)", event.instanceId());
             return;
         }

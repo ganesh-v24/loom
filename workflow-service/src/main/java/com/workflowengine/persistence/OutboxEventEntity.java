@@ -42,6 +42,15 @@ public class OutboxEventEntity {
     @Column(nullable = false)
     private String messageKey;
 
+    /**
+     * Fully-qualified class name of the original event record — replayed as the __TypeId__
+     * Kafka header so JsonDeserializer on the consumer side can still resolve the type. The
+     * relay sends via a plain String producer (see OutboxRelay), which unlike JsonSerializer
+     * doesn't add that header on its own, so it has to be restored explicitly.
+     */
+    @Column(nullable = false)
+    private String payloadType;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String payload;
 

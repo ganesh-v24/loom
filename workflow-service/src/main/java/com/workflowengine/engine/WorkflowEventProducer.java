@@ -40,8 +40,9 @@ public class WorkflowEventProducer {
 
     public void publishInstanceStateChanged(WorkflowInstanceEntity instance) {
         enqueue(Topics.INSTANCE_STATE_CHANGED, instance.getId().toString(),
-                new InstanceStateChanged(instance.getId(), instance.getDefinitionName(), instance.getDefinitionVersion(),
-                        instance.getStatus().name(), instance.getCurrentStepId(), instance.getUpdatedAt()));
+                new InstanceStateChanged(instance.getId(), instance.getWorkflowDefinitionId(), instance.getDefinitionName(),
+                        instance.getDefinitionVersion(), instance.getStatus().name(), instance.getCurrentStepId(),
+                        instance.getPayload(), instance.getUpdatedAt()));
     }
 
     public void publishAuditEvent(UUID instanceId, String eventType, String detail) {
@@ -54,6 +55,7 @@ public class WorkflowEventProducer {
             outboxRepository.save(OutboxEventEntity.builder()
                     .topic(topic)
                     .messageKey(key)
+                    .payloadType(event.getClass().getName())
                     .payload(jsonMapper.writeValueAsString(event))
                     .createdAt(Instant.now())
                     .build());

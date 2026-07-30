@@ -54,19 +54,30 @@ public class WorkflowCoordinatorService {
     public void onInstanceLifecycleRequested(InstanceLifecycleRequested event) {
         if (event.reason() == InstanceLifecycleRequested.Reason.STARTED) {
             onInstanceStarted(event);
+        } else {
+            onInstanceApproved(event);
+        }
+    }
+
+    /**
+     * Unlike onInstanceStarted, this instance already exists here and is expected to still be
+     * WAITING_APPROVAL — that status IS the "haven't processed this approval yet" guard, since
+     * this event is exactly what transitions it away from WAITING_APPROVAL. event.stepId() here
+     * is the *next* step to dispatch (api-service already resolved step.next() before
+     * publishing), not the step currently active, so there's nothing to compare it against.
+     */
+    private void onInstanceApproved(InstanceLifecycleRequested event) {
+        WorkflowInstanceEntity instance = instanceRepository.findById(event.instanceId()).orElse(null);
+        if (instance == null) {
+            throw new IllegalStateException("Instance replica not yet available: " + event.instanceId());
+        }
+        if (instance.getStatus() != InstanceStatus.WAITING_APPROVAL) {
+            log.debug("Ignoring stale approval-lifecycle event for instance {} (not WAITING_APPROVAL)", event.instanceId());
             return;
         }
 
-        WorkflowInstanceEntity instance = instanceRepository.findById(event.instanceId()).orElse(null);
-        if (instance == null || instance.getStatus() != InstanceStatus.RUNNING) {
-            log.debug("Ignoring stale lifecycle event for instance {} (not RUNNING)", event.instanceId());
-            return;
-        }
-        if (!instance.getCurrentStepId().equals(event.stepId())) {
-            log.debug("Ignoring stale lifecycle event for instance {} (already past step {})",
-                    event.instanceId(), event.stepId());
-            return;
-        }
+        instance.setCurrentStepId(event.stepId());
+        instance.setStatus(InstanceStatus.RUNNING);
         beginOrResumeAt(instance, specLoader.load(event.definitionId()));
     }
 
